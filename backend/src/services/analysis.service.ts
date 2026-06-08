@@ -91,11 +91,18 @@ export function getQuickProgress(
   lead: Lead,
   _messageCount: number
 ): { currentQuestionIndex: number; totalQuestions: number; questionsRemaining: number } {
-  const totalQuestions = FAB_QUESTIONS.length;
+  // The script has 9 questions but Q9 is optional — the progress bar should top out
+  // at 8 for the default linear flow. Q9 is treated as a bonus tail and is only
+  // exposed in the total once it's actually filled (then total ticks up to 9).
+  const requiredQuestionCount = FAB_QUESTIONS.filter((q) => !q.isOptional).length;
   const fa = lead.fabAnswers;
 
   if (!fa) {
-    return { currentQuestionIndex: 0, totalQuestions, questionsRemaining: totalQuestions };
+    return {
+      currentQuestionIndex: 0,
+      totalQuestions: requiredQuestionCount,
+      questionsRemaining: requiredQuestionCount,
+    };
   }
 
   // Map FAB_QUESTIONS order to the FabAnswers slot it captures.
@@ -114,7 +121,7 @@ export function getQuickProgress(
   ];
 
   let filled = 0;
-  for (let i = 0; i < Math.min(slotForIndex.length, totalQuestions); i++) {
+  for (let i = 0; i < Math.min(slotForIndex.length, FAB_QUESTIONS.length); i++) {
     const key = slotForIndex[i];
     const v = fa[key];
     if (typeof v === 'string' && v.trim().length > 0) {
@@ -124,6 +131,10 @@ export function getQuickProgress(
     }
   }
 
+  // If the user is still inside the required Q1..Q8 flow, report against 8.
+  // If they've actually answered Q9, expand the total so the bar shows the bonus.
+  const totalQuestions =
+    filled > requiredQuestionCount ? FAB_QUESTIONS.length : requiredQuestionCount;
   const currentQuestionIndex = Math.min(filled, totalQuestions - 1);
   return {
     currentQuestionIndex,

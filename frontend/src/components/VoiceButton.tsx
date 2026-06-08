@@ -33,7 +33,7 @@ export function VoiceButton({
   };
 
   const getIconBgColor = () => {
-    if (!isVoiceModeActive) return 'bg-allys-gray hover:bg-allys-light';
+    if (!isVoiceModeActive) return 'bg-fab-navy hover:bg-fab-navy-dark';
     return 'bg-red-500/20 hover:bg-red-500/30';
   };
 
@@ -73,7 +73,7 @@ export function VoiceButton({
             className={`
               w-8 h-8 rounded-full transition-all duration-200
               flex items-center justify-center
-              ${isVoiceModeActive ? 'bg-red-500/20' : 'bg-allys-gray'}
+              ${isVoiceModeActive ? 'bg-red-500/20' : 'bg-fab-navy'}
             `}
           >
             <div className={`transition-all duration-200 ${isVoiceModeActive ? 'text-red-400' : 'text-white'}`}>
@@ -101,7 +101,7 @@ export function VoiceButton({
         {isVoiceModeActive && (
           <span
             className={`
-              absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-allys-darker
+              absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-white
               ${getStatusDotColor()}
               ${!isProcessing ? 'animate-pulse' : ''}
             `}
@@ -177,12 +177,12 @@ export function VoiceButton({
               `}
             />
           )}
-          <span className={`text-xs font-medium tracking-wider uppercase ${isVoiceModeActive ? 'text-white' : 'text-allys-muted'}`}>
+          <span className={`text-xs font-medium tracking-wider uppercase ${isVoiceModeActive ? 'text-fab-navy' : 'text-fab-muted'}`}>
             {getStatusText()}
           </span>
         </div>
 
-        <p className={`text-xs ${isVoiceModeActive ? 'text-red-400' : 'text-allys-muted'}`}>
+        <p className={`text-xs ${isVoiceModeActive ? 'text-red-400' : 'text-fab-muted'}`}>
           {isVoiceModeActive ? 'Click to Stop' : 'Click to Start Speaking'}
         </p>
       </div>

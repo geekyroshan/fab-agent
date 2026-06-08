@@ -65,11 +65,11 @@ export function FabReportCard({ report, companyName }: FabReportCardProps) {
       </section>
 
       {/* Starting point */}
-      <section className="px-6 py-5 bg-fab-navy/[0.04]">
-        <div className="text-[11px] tracking-[0.2em] text-fab-muted mb-1.5">
+      <section className="px-6 py-5 bg-fab-navy text-white">
+        <div className="text-[11px] tracking-[0.2em] text-white/70 mb-1.5">
           YOUR STARTING POINT
         </div>
-        <p className="text-fab-navy font-semibold text-[15px] sm:text-base leading-snug">
+        <p className="text-white font-semibold text-[15px] sm:text-base leading-snug">
           {report.startingPoint}
         </p>
       </section>
@@ -105,8 +105,8 @@ function RecommendationRow({ rec }: { rec: FabRecommendation }) {
           )}
         </div>
         {rec.isProactive && (
-          <span className="shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full bg-fab-gold/15 text-fab-gold border border-fab-gold/30">
-            you didn't ask, but...
+          <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-fab-gold text-white">
+            Proactive pick
           </span>
         )}
       </div>

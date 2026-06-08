@@ -140,9 +140,21 @@ export function ConsultationPage() {
   const progressIndex = Math.min(Math.max(currentQuestionIndex, 0), progressTotal);
   const progressPct = (progressIndex / progressTotal) * 100;
 
+  // Treat `fabReport` as "real" only when it has the minimum required structure.
+  // An empty object or partial payload should never reveal the report card.
+  // This is a defence-in-depth check: the backend should only ever emit a fully
+  // formed report at the end of the flow, but if anything upstream goes wrong
+  // we'd rather show nothing than a half-rendered card.
+  const hasValidReport =
+    !!fabReport &&
+    typeof fabReport.snapshot === 'string' &&
+    fabReport.snapshot.trim().length > 0 &&
+    Array.isArray(fabReport.recommendations) &&
+    fabReport.recommendations.length > 0;
+
   // Show reflect-back pill briefly when research arrives but no report yet
   const showReflectBackPill =
-    !!companyResearch && companyResearch.source !== 'failed' && !fabReport;
+    !!companyResearch && companyResearch.source !== 'failed' && !hasValidReport;
 
   const companyName =
     useSessionStore.getState().fabAnswers.companyName ||
@@ -194,11 +206,11 @@ export function ConsultationPage() {
       <div className="shrink-0 bg-white border-b border-gray-200 px-4 lg:px-6 py-2.5">
         <div className="flex items-center justify-between text-[11px] text-fab-muted mb-1.5">
           <span className="tracking-wider">
-            {fabReport
+            {hasValidReport
               ? 'YOUR FAB SETUP'
               : `QUESTION ${Math.min(progressIndex + 1, progressTotal)} OF ${progressTotal}`}
           </span>
-          {!fabReport && (
+          {!hasValidReport && (
             <span className="text-fab-navy font-medium">
               {Math.round(progressPct)}%
             </span>
@@ -207,7 +219,7 @@ export function ConsultationPage() {
         <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
           <div
             className="h-full bg-fab-navy transition-all duration-500 ease-out"
-            style={{ width: `${fabReport ? 100 : progressPct}%` }}
+            style={{ width: `${hasValidReport ? 100 : progressPct}%` }}
           />
         </div>
       </div>
@@ -250,8 +262,8 @@ export function ConsultationPage() {
             {/* Typing indicator */}
             {isProcessing && <TypingIndicator />}
 
-            {/* Final report (inline at end of chat) */}
-            {fabReport && (
+            {/* Final report (inline at end of chat) — only when report is fully formed */}
+            {hasValidReport && fabReport && (
               <div className="mt-6 mb-6">
                 <FabReportCard report={fabReport} companyName={companyName} />
 

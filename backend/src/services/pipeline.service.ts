@@ -237,17 +237,22 @@ export class PipelineService extends EventEmitter {
 
       // 2) Extract the FAB answer for the question we just asked.
       const askedQuestion = getQuestionByIndex(this.askedQuestionIndex);
+      let extractionSucceeded = false;
       if (askedQuestion) {
         const patch = await extractFabAnswerFromUserMessage(askedQuestion, text);
         if (Object.keys(patch).length > 0) {
           const merged = updateFabAnswers(this.sessionId, patch);
           this.context!.lead.fabAnswers = merged;
+          extractionSucceeded = true;
         }
       }
       if (localAbort.signal.aborted) return;
 
       // 3) Post-Q2 special case: kick off company research before the next reply.
-      if (askedQuestion?.id === 'q2_company') {
+      // Only fire the research call when we actually captured a company name —
+      // otherwise we'd be researching the literal user reply ("hi") and surfacing
+      // an honest-but-pointless "thin" research event.
+      if (askedQuestion?.id === 'q2_company' && extractionSucceeded) {
         const companyName = this.context!.lead.fabAnswers?.companyName || text.trim();
         try {
           const research = await researchCompany(companyName);
@@ -265,9 +270,18 @@ export class PipelineService extends EventEmitter {
       }
 
       // 4) Decide what the assistant should say next.
-      const nextQuestionIndex = this.askedQuestionIndex + 1;
-      const isLastQuestionAnswered = this.askedQuestionIndex >= FAB_QUESTIONS.length - 1
-        || (this.askedQuestionIndex >= 7 && this.shouldSkipOptional());
+      // If the extraction failed (junk answer like "hi"), do NOT advance — re-ask
+      // the same question so the conversation stays on the rails. This also keeps
+      // `isLastQuestionAnswered` honest: the report can only fire when each of the
+      // required slots has been filled in order.
+      const advance = extractionSucceeded || !askedQuestion;
+      const nextQuestionIndex = advance
+        ? this.askedQuestionIndex + 1
+        : this.askedQuestionIndex;
+      const isLastQuestionAnswered =
+        advance &&
+        (this.askedQuestionIndex >= FAB_QUESTIONS.length - 1
+          || (this.askedQuestionIndex >= 7 && this.shouldSkipOptional()));
 
       let assistantReply: string;
 
@@ -300,7 +314,11 @@ export class PipelineService extends EventEmitter {
         } else {
           assistantReply = reply.trim();
         }
-        this.askedQuestionIndex = nextQuestionIndex;
+        // Cap so post-report follow-up messages don't push the index past the script.
+        // Only advance when we actually accepted an answer (see `advance` above).
+        if (advance) {
+          this.askedQuestionIndex = Math.min(nextQuestionIndex, FAB_QUESTIONS.length - 1);
+        }
       }
 
       if (localAbort.signal.aborted) return;

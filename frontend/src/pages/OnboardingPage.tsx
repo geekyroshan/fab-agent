@@ -60,7 +60,7 @@ export function OnboardingPage() {
           Let's get your business set up with FAB.
         </h1>
         <p className="text-fab-muted text-base sm:text-lg leading-relaxed mb-10 max-w-md mx-auto">
-          A few quick questions, then I'll put together a setup made for you.
+          A few quick questions, and we'll put together a setup tailored for you.
         </p>
 
         {/* Primary CTA */}
@@ -94,7 +94,7 @@ export function OnboardingPage() {
               hover:text-fab-navy transition-colors disabled:opacity-60
             "
           >
-            {isLoading && useBackup ? 'Loading demo...' : 'Use a demo company'}
+            {isLoading && useBackup ? 'Loading sample...' : 'Try with sample data'}
           </button>
         </div>
 

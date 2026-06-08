@@ -34,6 +34,7 @@ export function useWebSocket() {
     setAnalysisData,
     setAnalysisComplete,
     setMinInteractionsReached,
+    // Kept on the store but no longer auto-fired from message count — see 'response' handler.
     setFabReport,
     setCompanyResearch,
     setProgress,
@@ -154,18 +155,13 @@ export function useWebSocket() {
               timestamp: new Date(),
             };
             addMessage(assistantMessage);
-
-            // Check if we've reached minimum interactions (4+ messages)
-            // and auto-trigger analysis if not already completed
-            const currentState = useSessionStore.getState();
-            const messageCount = currentState.messages.length + 1; // +1 for the message just added
-            if (messageCount >= 4) {
-              setMinInteractionsReached(true);
-              // Auto-trigger analysis after 4+ messages (first-time only)
-              if (!currentState.analysisComplete && !analysisResolverRef.current) {
-                ws.send(JSON.stringify({ type: 'analyze' }));
-              }
-            }
+            // NOTE: Do NOT auto-trigger `analyze` here. In the FAB onboarding flow,
+            // the report is emitted by the backend pipeline ONLY after all 8 questions
+            // have real answers (or Q9 was triggered/skipped via shouldSkipOptional).
+            // The legacy "≥4 messages → analyze" trigger from AllysAI was responsible
+            // for the "report appears after typing 'hi'" bug. Leave the analyze plumbing
+            // in place for explicit user-triggered requests via requestAnalysis(), but
+            // do not fire it automatically based on message count.
             break;
 
           case 'audio':

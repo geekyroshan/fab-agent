@@ -97,10 +97,18 @@ export async function extractFabAnswerFromUserMessage(
 
   // Fast paths: name + company are short enough that we just take the user's reply verbatim.
   if (targetKey === 'name') {
-    return { name: extractFirstName(cleanReply) };
+    const extracted = extractFirstName(cleanReply);
+    // If the reply was just a greeting / filler ("hi", "hello"), do NOT write a name.
+    // Returning an empty patch keeps the name slot unfilled so progress stays on Q1
+    // and the system prompt's "push gently on vague answers" rule can re-ask cleanly.
+    if (!extracted) return {};
+    return { name: extracted };
   }
   if (targetKey === 'companyName') {
-    return { companyName: stripFiller(cleanReply) };
+    const stripped = stripFiller(cleanReply);
+    // Same defensive treatment for Q2 — a one-word greeting is not a company name.
+    if (!stripped || NON_NAME_TOKENS.has(stripped.toLowerCase())) return {};
+    return { companyName: stripped };
   }
 
   // For the remaining slots, run a quick gpt-4o-mini structured extraction.
@@ -267,6 +275,31 @@ function inferAnswerKey(question: FabQuestion): keyof FabAnswers | null {
   return null;
 }
 
+// Greetings / fillers that must never end up stored as a person's name.
+// If the user's entire Q1 reply is one of these, we treat the answer as missing
+// rather than store "Hi" in the name slot — the LLM will then naturally re-ask.
+const NON_NAME_TOKENS = new Set([
+  'hi',
+  'hey',
+  'hello',
+  'yo',
+  'hiya',
+  'sup',
+  'morning',
+  'afternoon',
+  'evening',
+  'ok',
+  'okay',
+  'sure',
+  'yes',
+  'no',
+  'nope',
+  'yeah',
+  'thanks',
+  'thank you',
+  'thx',
+]);
+
 function extractFirstName(reply: string): string {
   // Tolerate "I'm Omar", "My name is Omar", "Omar here", "It's Omar".
   const cleaned = reply
@@ -274,8 +307,16 @@ function extractFirstName(reply: string): string {
     .replace(/^(i'?m|i am|it'?s|this is|my name is|name'?s)\s+/i, '')
     .trim();
   const firstToken = cleaned.split(/[\s,.;]+/)[0] || cleaned;
+  if (firstToken.length === 0) return '';
+
+  // Reject standalone greetings/fillers so we don't store "Hi" as the lead's name.
+  const lowerToken = firstToken.toLowerCase();
+  const lowerWhole = reply.trim().toLowerCase();
+  if (NON_NAME_TOKENS.has(lowerToken) || NON_NAME_TOKENS.has(lowerWhole)) {
+    return '';
+  }
+
   // Capitalise nicely.
-  if (firstToken.length === 0) return reply.trim();
   return firstToken.charAt(0).toUpperCase() + firstToken.slice(1);
 }
 

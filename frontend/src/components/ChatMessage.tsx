@@ -3,7 +3,8 @@ import { Message } from '../types';
 
 interface ChatMessageProps {
   message: Message;
-  index: number;
+  /** Kept for backward compatibility with existing callers; unused now. */
+  index?: number;
   onMuteAudio?: () => void;
   showMuteButton?: boolean;
 }
@@ -93,7 +94,7 @@ function formatMessage(content: string): ReactNode {
   return elements;
 }
 
-export function ChatMessage({ message, index, onMuteAudio, showMuteButton }: ChatMessageProps) {
+export function ChatMessage({ message, onMuteAudio, showMuteButton }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const time = message.timestamp.toLocaleTimeString('en-US', {
     hour: '2-digit',
@@ -104,22 +105,32 @@ export function ChatMessage({ message, index, onMuteAudio, showMuteButton }: Cha
   return (
     <div className="message-enter mb-4 lg:mb-6">
       <div className="flex items-start gap-2 lg:gap-4">
-        {/* Message number */}
-        <div className="flex-shrink-0 w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-allys-gray flex items-center justify-center text-[10px] lg:text-xs text-allys-muted">
-          {String(index + 1).padStart(2, '0')}
+        {/* Role avatar */}
+        <div
+          className={`flex-shrink-0 w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center ${
+            isUser ? 'bg-fab-navy/10' : 'bg-fab-navy'
+          }`}
+        >
+          <span
+            className={`text-[10px] lg:text-xs font-semibold ${
+              isUser ? 'text-fab-navy' : 'text-white'
+            }`}
+          >
+            {isUser ? 'YOU' : 'FAB'}
+          </span>
         </div>
 
         {/* Message content */}
         <div className="flex-1 min-w-0">
-          <div className={`text-sm leading-relaxed ${isUser ? 'text-allys-muted' : 'text-allys-text'}`}>
+          <div className={`text-[15px] leading-relaxed ${isUser ? 'text-fab-muted' : 'text-fab-text'}`}>
             {isUser ? message.content : formatMessage(message.content)}
           </div>
 
           {/* Metadata */}
-          <div className="mt-1.5 lg:mt-2 flex items-center gap-2 lg:gap-3 text-[10px] lg:text-xs text-allys-muted flex-wrap">
+          <div className="mt-1.5 lg:mt-2 flex items-center gap-2 lg:gap-3 text-[10px] lg:text-xs text-fab-muted flex-wrap">
             <span>{time}</span>
             <span>•</span>
-            <span>{isUser ? 'YOU' : 'AI EXPERT'}</span>
+            <span>{isUser ? 'YOU' : 'FAB'}</span>
             {message.inputType === 'voice' && (
               <>
                 <span>•</span>
@@ -137,7 +148,7 @@ export function ChatMessage({ message, index, onMuteAudio, showMuteButton }: Cha
                 <span>•</span>
                 <button
                   onClick={onMuteAudio}
-                  className="text-allys-muted hover:text-red-400 transition-colors"
+                  className="text-fab-muted hover:text-fab-red transition-colors"
                   title="Mute this response"
                 >
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">

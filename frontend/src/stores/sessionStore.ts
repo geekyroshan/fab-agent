@@ -89,7 +89,36 @@ export const useSessionStore = create<SessionState>((set) => ({
   currentQuestionIndex: 0,
   totalQuestions: initialTotalQuestions,
 
-  setSessionId: (id) => set({ sessionId: id }),
+  // Setting a new sessionId implies a brand-new onboarding. Wipe any FAB
+  // artefacts (report, research, answers, progress) from a previous session
+  // so the frontend never carries a stale report into a fresh chat. This is
+  // the in-memory equivalent of "clearing persist storage" — without it, an
+  // SPA navigation back to /onboarding then forward into a new chat would
+  // briefly render the previous report before the WS reconnected.
+  setSessionId: (id) =>
+    set((state) => {
+      if (state.sessionId === id) {
+        return { sessionId: id };
+      }
+      return {
+        sessionId: id,
+        messages: [],
+        metrics: initialMetrics,
+        pipelineState: 'idle',
+        currentTranscript: '',
+        error: null,
+        analysisComplete: false,
+        lastAnalysisMessageCount: 0,
+        analysisData: null,
+        minInteractionsReached: false,
+        isVoiceModeActive: false,
+        fabAnswers: initialFabAnswers,
+        companyResearch: null,
+        fabReport: null,
+        currentQuestionIndex: 0,
+        totalQuestions: initialTotalQuestions,
+      };
+    }),
 
   setLead: (lead) => set({ lead }),
 
