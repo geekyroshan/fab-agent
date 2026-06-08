@@ -61,6 +61,17 @@ export function ConsultationPage() {
     toggleVoiceMode();
   }, [isVoiceModeActive, toggleVoiceMode, sendControl, stopAudio, setVoiceModeActive]);
 
+  // Compute the canonical company name. Priority:
+  //   1. The companyName the backend stuffed onto the report event payload
+  //      (it backfilled lead.company in SQL when Q2 was captured).
+  //   2. The fabAnswers store, if the frontend captured it.
+  //   3. The initial lead.company from /api/session/start (usually empty).
+  const resolvedCompanyName = useCallback((): string | undefined => {
+    const fromReport = (fabReport as unknown as { companyName?: string } | null)?.companyName;
+    const fromAnswers = useSessionStore.getState().fabAnswers.companyName;
+    return fromReport || fromAnswers || lead?.company || undefined;
+  }, [fabReport, lead]);
+
   // Handle PDF export — FAB report PDF
   const handleExport = useCallback(async () => {
     if (isExporting || !lead || !sessionId || !fabReport) return;
@@ -72,13 +83,14 @@ export function ConsultationPage() {
         report: fabReport,
         sessionId,
         generatedAt: new Date().toISOString(),
+        companyName: resolvedCompanyName(),
       });
     } catch (error) {
       console.error('Export failed:', error);
     } finally {
       setIsExporting(false);
     }
-  }, [isExporting, lead, sessionId, fabReport]);
+  }, [isExporting, lead, sessionId, fabReport, resolvedCompanyName]);
 
   // Handle end session (optionally with PDF download)
   const handleEndSession = useCallback(
@@ -93,6 +105,7 @@ export function ConsultationPage() {
             report: fabReport,
             sessionId,
             generatedAt: new Date().toISOString(),
+            companyName: resolvedCompanyName(),
           });
         }
 
@@ -125,6 +138,7 @@ export function ConsultationPage() {
       setVoiceModeActive,
       reset,
       navigate,
+      resolvedCompanyName,
     ]
   );
 
@@ -156,15 +170,7 @@ export function ConsultationPage() {
   const showReflectBackPill =
     !!companyResearch && companyResearch.source !== 'failed' && !hasValidReport;
 
-  // Prefer the canonical companyName that the backend stuffed onto the
-  // report event payload (it backfilled lead.company in SQL when Q2 was
-  // captured). Fall back to whatever the store has, then to the initial
-  // lead. This is the source of truth used in the PDF header.
-  const companyName =
-    (fabReport as unknown as { companyName?: string } | null)?.companyName ||
-    useSessionStore.getState().fabAnswers.companyName ||
-    lead.company ||
-    undefined;
+  const companyName = resolvedCompanyName();
 
   return (
     <div className="h-[100dvh] flex flex-col bg-fab-cream overflow-hidden">
