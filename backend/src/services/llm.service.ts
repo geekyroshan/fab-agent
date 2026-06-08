@@ -28,6 +28,9 @@ export interface GenerateOptions {
   fabAnswers?: FabAnswers;
   currentQuestionIndex?: number;
   companyResearch?: CompanyResearch;
+  /** True if the previous user reply did not yield a usable answer
+   *  for the current question — the LLM must rephrase, never repeat. */
+  isReasking?: boolean;
 }
 
 /**
@@ -111,39 +114,76 @@ export async function extractFabAnswerFromUserMessage(
     return { companyName: stripped };
   }
 
-  // For the remaining slots, run a quick gpt-4o-mini structured extraction.
+  // For the remaining slots, run a quick gpt-4o-mini structured extraction
+  // with per-question COMPLETENESS rules. If the reply is missing required
+  // pieces, we return empty so the pipeline won't advance and the agent
+  // will probe for the missing piece next turn.
   try {
+    const completenessRule = completenessRuleForQuestion(question.id);
     const response = await openai.chat.completions.create({
       model: chatModel('gpt-4o-mini'),
       messages: [
         {
           role: 'system',
           content:
-            'You extract a single piece of information from a short user reply and return only valid JSON. Be concise: a short phrase or sentence, mirroring the user\'s words. Never invent facts.',
+            'You extract a single piece of information from a short user reply for a banker-grade onboarding. Return only valid JSON. Mirror the user\'s words verbatim — never invent or assume facts. If the reply is missing a piece the question explicitly asked for, return an empty value so we can probe for the missing piece.',
         },
         {
           role: 'user',
           content: `Question asked: "${question.agentAsks}"
 User reply: "${cleanReply}"
 
-Return JSON: { "value": string }
-The value is what the user said relevant to the question, normalised to one short clause. If the reply does not answer, return { "value": "" }.`,
+${completenessRule}
+
+Return JSON: { "value": string, "complete": boolean }
+- value: the user's literal answer relevant to the question, normalised to one short clause. Never paraphrase, never assume context the user didn't provide.
+- complete: true ONLY if the reply contains every piece the question explicitly asked for, per the rule above.
+
+If complete is false, set value to "" so the agent can probe the user for the missing piece.`,
         },
       ],
       response_format: { type: 'json_object' },
-      max_tokens: 120,
-      temperature: 0.1,
+      max_tokens: 160,
+      temperature: 0.0,
     });
 
     const content = response.choices[0]?.message?.content;
-    if (!content) return { [targetKey]: cleanReply } as Partial<FabAnswers>;
+    if (!content) return {};
 
-    const parsed = JSON.parse(content) as { value?: string };
-    const value = (parsed.value || '').trim() || cleanReply;
+    const parsed = JSON.parse(content) as { value?: string; complete?: boolean };
+    const value = (parsed.value || '').trim();
+    // Hard gate: don't accept the value unless the LLM confirms completeness.
+    if (!value || parsed.complete === false) return {};
     return { [targetKey]: value } as Partial<FabAnswers>;
   } catch (err) {
-    console.error('extractFabAnswerFromUserMessage failed, falling back to raw reply:', err);
-    return { [targetKey]: cleanReply } as Partial<FabAnswers>;
+    console.error('extractFabAnswerFromUserMessage failed:', err);
+    return {};
+  }
+}
+
+/**
+ * Per-question completeness rule passed to the extractor. These mirror the
+ * probing rules in the system prompt, but enforced at extraction time so the
+ * pipeline doesn't advance until we have a real answer.
+ */
+function completenessRuleForQuestion(qid: string): string {
+  switch (qid) {
+    case 'q3_what_does':
+      return 'Completeness rule: the reply must describe what the business actually does day-to-day. A single word ("yes", "ok") or generic filler ("we do business") is NOT complete. A short sentence is fine.';
+    case 'q4_size_stage':
+      return 'Completeness rule: the reply must contain BOTH (a) a sense of team size (any number of people, or words like "team of N", "solo", "just me", "a few") AND (b) a sense of how long the business has been operating (a number of years/months, or words like "just started", "new", "a few years"). A bare number alone ("5", "12") is NOT complete — could mean staff OR years. A description of ONLY size or ONLY duration is NOT complete.';
+    case 'q5_cross_border':
+      return 'Completeness rule: a bare "yes" or "no" is NOT complete. If yes: the reply must mention direction (buying, selling, or both) AND at least one country/region. If no: a clear "no", "only UAE", "domestic only", or similar phrasing IS complete.';
+    case 'q6_payment_terms':
+      return 'Completeness rule: the reply must include a time period with a unit (e.g. "30 days", "60 days", "on the spot", "immediately") OR a clear "we get paid upfront". A bare number ("30", "60") is NOT complete.';
+    case 'q7_payment_method':
+      return 'Completeness rule: the reply must mention at least one payment method (card, bank transfer, cash, online, POS, etc.). A bare "yes" or "no" is NOT complete; a single word like "card" or "bank transfer" IS complete.';
+    case 'q8_headache':
+      return 'Completeness rule: the reply must describe a specific pain point in at least a short sentence. A single word ("cash flow", "growth", "money") is NOT complete — we need to know what specifically about it.';
+    case 'q9_growth_optional':
+      return 'Completeness rule: a clear "no" / "nothing big" IS complete. Otherwise the reply must mention what the upcoming thing is (hiring, premises, equipment, etc.).';
+    default:
+      return 'Completeness rule: the reply must directly address the question.';
   }
 }
 
@@ -162,7 +202,8 @@ async function generateWithOpenAI(
     ragContext || undefined,
     options.fabAnswers,
     options.currentQuestionIndex ?? 0,
-    options.companyResearch
+    options.companyResearch,
+    options.isReasking ?? false,
   );
 
   const recentHistory = context.history.slice(-8);
@@ -207,7 +248,8 @@ async function generateWithClaude(
     ragContext || undefined,
     options.fabAnswers,
     options.currentQuestionIndex ?? 0,
-    options.companyResearch
+    options.companyResearch,
+    options.isReasking ?? false,
   );
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {

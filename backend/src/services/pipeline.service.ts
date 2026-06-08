@@ -326,11 +326,17 @@ export class PipelineService extends EventEmitter {
             fabAnswers: this.context!.lead.fabAnswers,
             currentQuestionIndex: nextQuestionIndex,
             companyResearch: this.context!.lead.companyResearch,
+            // When extraction failed we are re-asking the same question.
+            // The prompt builder uses this to enforce a rephrased ask
+            // (never repeat verbatim) and the per-question probing rule.
+            isReasking: !advance,
           }
         );
 
         // Defensive: if the LLM forgot to ask the actual next question, append it verbatim.
-        if (nextQuestion && !this.replyContainsQuestion(reply, nextQuestion)) {
+        // Skip this defensive append when we're re-asking — the LLM is supposed to
+        // rephrase, not append the original question on the end.
+        if (advance && nextQuestion && !this.replyContainsQuestion(reply, nextQuestion)) {
           const companyName = this.context!.lead.fabAnswers?.companyName;
           assistantReply = `${reply.trim()} ${renderAgentPrompt(nextQuestion, companyName)}`;
         } else {

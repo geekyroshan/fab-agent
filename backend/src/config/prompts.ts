@@ -120,7 +120,8 @@ export function buildSystemPrompt(
   ragContext?: string,
   fabAnswers?: FabAnswers,
   currentQuestionIndex: number = 0,
-  companyResearch?: CompanyResearch
+  companyResearch?: CompanyResearch,
+  isReasking: boolean = false,
 ): string {
   const currentQuestion = FAB_QUESTIONS[currentQuestionIndex];
   const isPostResearchReflect = currentQuestionIndex === 2; // Q3 is the first post-research question
@@ -135,23 +136,46 @@ export function buildSystemPrompt(
       ? `The user just gave you a high-signal answer. Acknowledge it in ONE short clause (max 8 words) before asking the next question. Example: "Got it — cash-gap is real." then move on.`
       : `Acknowledge briefly if natural, then ask the next question. Do not pile on filler.`;
 
-  const currentSlotValue = currentQuestion ? slotValueForQuestion(currentQuestion.id, fabAnswers) : undefined;
-  const reAsking = !!(currentSlotValue === undefined && hasUserAnsweredAlready(currentQuestionIndex, fabAnswers));
+  // The pipeline tells us authoritatively when the previous reply didn't
+  // produce a usable answer. Fall back to a heuristic if the caller didn't
+  // pass it (older callers, tests).
+  const reAsking = isReasking
+    || (currentQuestion && slotValueForQuestion(currentQuestion.id, fabAnswers) === undefined && hasUserAnsweredAlready(currentQuestionIndex, fabAnswers));
 
   const probeGuidance = currentQuestion
     ? probeRulesForQuestion(currentQuestion.id, fabAnswers)
     : '';
 
+  const reAskBlock = reAsking && currentQuestion
+    ? `# 🚨 RE-ASK MODE — the previous user reply did not give you a usable answer for the current question.
+You MUST do ALL of the following:
+1. NEVER repeat the question verbatim. Do not start with the same words you used last time.
+2. Rephrase the question completely. Change the opening, change the structure.
+3. Probe for the SPECIFIC missing piece (see the probing rule below).
+4. Add a tiny human acknowledgment at the start ("No worries —", "Just to make sure I get this right —", "Quick one —").
+5. Keep it to ONE short sentence + the rephrased ask.
+
+Examples (do NOT copy these verbatim — match the style):
+- Q1 re-ask: "No worries — could you share your first name?"
+- Q4 re-ask (after "5"): "Quick clarifier — is that 5 staff, or 5 years going?"
+- Q5 re-ask (after "yes"): "Got it — buying, selling, or both? And roughly where?"
+- Q6 re-ask (after "30"): "30 days from invoice, or something different?"
+- Q8 re-ask (after "cash flow"): "Sure — what does that look like for you day to day? One concrete example."
+`
+    : '';
+
   const nextQuestionText = currentQuestion
-    ? `The next question to ask is question index ${currentQuestionIndex} (id: ${currentQuestion.id}):
+    ? (reAsking
+        ? `You are RE-ASKING the user about question index ${currentQuestionIndex} (id: ${currentQuestion.id}).
+Original wording (for reference only — do NOT repeat): "${currentQuestion.agentAsks}"
+Personalise with the company name where relevant: "${fabAnswers?.companyName || 'the business'}".
+
+See the RE-ASK MODE block above and follow it strictly.`
+        : `The next question to ask is question index ${currentQuestionIndex} (id: ${currentQuestion.id}):
 "${currentQuestion.agentAsks}"
 
-You MAY personalise the wording (substitute "${fabAnswers?.companyName || 'the business'}" for "[Company]") but you MUST capture the same intent and ask ONLY this one question.
-
-${reAsking
-  ? `IMPORTANT: The user's previous reply did not contain a usable answer to this question (likely a greeting, a one-word filler like "yes/no/ok", or something off-topic). You are re-asking. Do NOT repeat the question verbatim — rephrase it softly and add a tiny acknowledgment, e.g. "No problem — could you share your name?" or "Just to be sure I get this — buying, selling, or both, and roughly which countries?". Never sound robotic.`
-  : ''}
-${probeGuidance}`
+You MAY personalise the wording (substitute "${fabAnswers?.companyName || 'the business'}" for "[Company]") but you MUST capture the same intent and ask ONLY this one question.`)
+    + `\n\n${probeGuidance}`
     : `All questions have been asked. Do NOT ask another question. Tell the user you have what you need and you are putting their FAB setup together now. Your reply should be exactly: "Putting your setup together. One moment."`;
 
   return `You are a FAB (First Abu Dhabi Bank) SME relationship manager guiding a small-business owner through a quick onboarding. You are warm, confident, banker-grade but human. Second person. Short sentences. No jargon.
@@ -186,6 +210,8 @@ ${formatResearch(companyResearch)}
 ## Full question script (for context only)
 ${formatQuestionList(currentQuestionIndex)}
 
+${reAskBlock}
+
 ## What to do RIGHT NOW
 ${nextQuestionText}
 
@@ -193,7 +219,7 @@ ${reflectGuidance}
 
 ${ragContext ? `\n# Product knowledge (background only — do not quote rates or fees)\n${ragContext}\n` : ''}
 
-Remember: ONE question. Short. No markdown. No rates. No compliance talk.`;
+Remember: ONE question. Short. No markdown. No rates. No compliance talk.${reAsking ? ' YOU ARE RE-ASKING — rephrase, do not repeat.' : ''}`;
 }
 
 // =============================================================================
