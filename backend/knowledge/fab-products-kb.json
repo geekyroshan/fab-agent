@@ -1,0 +1,523 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "June 2026",
+    "description": "FAB SME AI Onboarding Agent Knowledge Base — 8 product pillars + Magnati ecosystem + SME Rewards. Descriptions pulled verbatim from PRD section 7. No rates, fees, or balance thresholds quoted."
+  },
+  "documents": [
+    {
+      "id": "fab-accounts-basic",
+      "category": "Accounts",
+      "product": "Business Basic Account",
+      "title": "FAB Business Basic Account",
+      "content": "Core everyday business banking for new SMEs and startups. Multi-currency support, online banking, cheque book, debit card, and access to the FAB branch and ATM network. The entry tier for newly licensed businesses and small SMEs starting out.",
+      "triggers": [
+        "new company",
+        "just licensed",
+        "just got our trade licence",
+        "small SME",
+        "startup",
+        "small team",
+        "early stage",
+        "first business account",
+        "opening an account",
+        "two of us",
+        "few employees"
+      ]
+    },
+    {
+      "id": "fab-accounts-advantage",
+      "category": "Accounts",
+      "product": "Business Advantage Account",
+      "title": "FAB Business Advantage Account",
+      "content": "Step-up account tier for growing SMEs with more activity, more transactions, and a larger team. Wider set of everyday banking features, multi-currency, online banking, and broader transaction allowances than the Basic tier. Common fit for SMEs that have moved past startup phase and are scaling.",
+      "triggers": [
+        "growing business",
+        "scaling",
+        "team is growing",
+        "more transactions",
+        "established SME",
+        "been going for a few years",
+        "expanding",
+        "growing team",
+        "more activity",
+        "step up account"
+      ]
+    },
+    {
+      "id": "fab-accounts-premier",
+      "category": "Accounts",
+      "product": "Business Premier Account",
+      "title": "FAB Business Premier Account",
+      "content": "Top-tier business account for established SMEs and larger commercial relationships. Premium service, priority banking, and the highest level of relationship management within the FAB SME proposition.",
+      "triggers": [
+        "large SME",
+        "established business",
+        "premium service",
+        "priority banking",
+        "high turnover",
+        "mature company",
+        "well established",
+        "bigger operation"
+      ]
+    },
+    {
+      "id": "fab-accounts-call-fixed-deposit",
+      "category": "Accounts",
+      "product": "Call & Fixed Deposit",
+      "title": "FAB Call and Fixed Deposit",
+      "content": "Deposit accounts for SMEs holding idle working capital they don't need on demand. Lets the business put cash to work while keeping it within FAB. Useful when the operating account is consistently carrying surplus balance.",
+      "triggers": [
+        "idle cash",
+        "surplus cash",
+        "extra money sitting",
+        "cash we don't need",
+        "build a reserve",
+        "park cash",
+        "put cash to work",
+        "we have savings",
+        "extra balance",
+        "money just sitting there"
+      ]
+    },
+    {
+      "id": "fab-cards-credit",
+      "category": "Commercial Cards",
+      "product": "Commercial Credit Card",
+      "title": "FAB Commercial Credit Card",
+      "content": "Business credit card for managing operating expenses, supplier payments, travel, and team spend with proper controls and visibility. A standard companion to any business account for spend control.",
+      "triggers": [
+        "business expenses",
+        "team spend",
+        "supplier payments",
+        "travel expenses",
+        "expense management",
+        "company card",
+        "control spending",
+        "staff cards",
+        "business credit card"
+      ]
+    },
+    {
+      "id": "fab-cards-debit-platinum",
+      "category": "Commercial Cards",
+      "product": "Commercial Debit Card / Platinum",
+      "title": "FAB Commercial Debit Card and Platinum",
+      "content": "Debit card linked directly to the business account for day-to-day spending. Platinum tier adds airport lounge access and additional perks at higher account tiers.",
+      "triggers": [
+        "debit card",
+        "business debit",
+        "lounge access",
+        "platinum card",
+        "travel a lot",
+        "frequent traveller",
+        "everyday business spend"
+      ]
+    },
+    {
+      "id": "fab-loans-working-capital",
+      "category": "Loans",
+      "product": "Working Capital Loan",
+      "title": "FAB Working Capital Loan",
+      "content": "Financing to cover the gap between paying suppliers and getting paid by customers. Built for SMEs whose cash flow is constrained by payment terms or seasonal cycles.",
+      "triggers": [
+        "cash flow",
+        "cash gap",
+        "waiting to get paid",
+        "long payment terms",
+        "60 day payment",
+        "90 day payment",
+        "pay suppliers before customers pay us",
+        "working capital",
+        "tight on cash",
+        "covering the gap",
+        "seasonal business"
+      ]
+    },
+    {
+      "id": "fab-loans-asset-financing",
+      "category": "Loans",
+      "product": "Asset Financing",
+      "title": "FAB Asset Financing",
+      "content": "Financing for purchasing business assets — vehicles, equipment, machinery, fit-out — spread over time rather than paid up front. Suits SMEs investing in capacity or growth.",
+      "triggers": [
+        "buy equipment",
+        "buy vehicles",
+        "new machinery",
+        "fit out",
+        "new premises equipment",
+        "expanding capacity",
+        "fleet",
+        "asset purchase",
+        "capex",
+        "new tools"
+      ]
+    },
+    {
+      "id": "fab-loans-invoice-discounting",
+      "category": "Loans",
+      "product": "Invoice Discounting",
+      "title": "FAB Invoice Discounting",
+      "content": "Unlock cash tied up in unpaid customer invoices. The business is advanced funds against approved invoices instead of waiting the full payment term. Built for SMEs with creditworthy customers and slow-paying contracts.",
+      "triggers": [
+        "unpaid invoices",
+        "invoices outstanding",
+        "customers pay late",
+        "60 day terms",
+        "90 day terms",
+        "advance against invoices",
+        "factoring",
+        "discount invoices",
+        "money locked in invoices",
+        "delivered but not paid"
+      ]
+    },
+    {
+      "id": "fab-loans-sme-facilities",
+      "category": "Loans",
+      "product": "SME Facilities",
+      "title": "FAB SME Facilities",
+      "content": "Bundled credit facilities tailored to SME needs — combinations of working capital, overdraft, and term lending packaged together as a single relationship facility.",
+      "triggers": [
+        "credit line",
+        "overdraft",
+        "facility",
+        "bundle of credit",
+        "flexible borrowing",
+        "credit facility",
+        "line of credit"
+      ]
+    },
+    {
+      "id": "fab-loans-pos-loan",
+      "category": "Loans",
+      "product": "POS Loan",
+      "title": "FAB POS Loan",
+      "content": "Lending linked to point-of-sale receivables. The business borrows against future card sales — useful for retail or hospitality SMEs with steady card-based revenue.",
+      "triggers": [
+        "card sales",
+        "POS revenue",
+        "retail business",
+        "restaurant",
+        "shop",
+        "borrow against sales",
+        "card receipts",
+        "loan against takings"
+      ]
+    },
+    {
+      "id": "fab-mortgages-commercial",
+      "category": "Mortgages",
+      "product": "Commercial Mortgage",
+      "title": "FAB Commercial Mortgage",
+      "content": "Mortgage financing for business property — offices, warehouses, retail units, industrial premises. For SMEs buying their own commercial space instead of renting.",
+      "triggers": [
+        "buying offices",
+        "buying a warehouse",
+        "new premises",
+        "commercial property",
+        "buying our space",
+        "stop renting",
+        "own our office",
+        "industrial unit"
+      ]
+    },
+    {
+      "id": "fab-mortgages-residential",
+      "category": "Mortgages",
+      "product": "Residential Mortgage",
+      "title": "FAB Residential Mortgage",
+      "content": "Residential home financing offered to SME owners and key employees alongside the business relationship.",
+      "triggers": [
+        "buying a home",
+        "personal mortgage",
+        "house purchase",
+        "owner mortgage",
+        "residential property"
+      ]
+    },
+    {
+      "id": "fab-trade-letter-of-credit",
+      "category": "Trade & Working Capital",
+      "product": "Letter of Credit",
+      "title": "FAB Letter of Credit",
+      "content": "A bank-issued guarantee that the seller will be paid once shipping and documentary conditions are met. Standard tool for SMEs importing from or exporting to overseas suppliers and buyers who require payment security.",
+      "triggers": [
+        "import",
+        "importing",
+        "overseas supplier",
+        "buy from abroad",
+        "international supplier",
+        "LC",
+        "letter of credit",
+        "payment guarantee",
+        "supplier wants security",
+        "shipping from overseas"
+      ]
+    },
+    {
+      "id": "fab-trade-bank-guarantee",
+      "category": "Trade & Working Capital",
+      "product": "Bank Guarantee / Standby LC",
+      "title": "FAB Bank Guarantee and Standby Letter of Credit",
+      "content": "A formal undertaking by FAB to pay a counterparty if the business fails to meet a contractual obligation. Common in tenders, performance bonds, and supplier agreements.",
+      "triggers": [
+        "tender",
+        "performance bond",
+        "bid bond",
+        "guarantee for landlord",
+        "guarantee for supplier",
+        "bank guarantee",
+        "standby LC",
+        "winning contracts",
+        "government tender"
+      ]
+    },
+    {
+      "id": "fab-trade-documentary-collection",
+      "category": "Trade & Working Capital",
+      "product": "Documentary Collection",
+      "title": "FAB Documentary Collection",
+      "content": "A trade settlement method where the bank handles shipping documents and releases them to the buyer against payment or acceptance. Lighter and cheaper than a full Letter of Credit.",
+      "triggers": [
+        "documentary collection",
+        "shipping documents",
+        "release docs against payment",
+        "lighter than LC",
+        "import paperwork"
+      ]
+    },
+    {
+      "id": "fab-trade-financing",
+      "category": "Trade & Working Capital",
+      "product": "Trade Financing",
+      "title": "FAB Trade Financing",
+      "content": "Short-term financing of import and export transactions — covering the period between paying a supplier and receiving payment from a buyer. Built for SMEs with active cross-border trade flows.",
+      "triggers": [
+        "import finance",
+        "export finance",
+        "trade finance",
+        "finance shipments",
+        "cross border financing",
+        "fund our imports",
+        "fund our exports"
+      ]
+    },
+    {
+      "id": "fab-trade-working-capital-intelligence",
+      "category": "Trade & Working Capital",
+      "product": "Working Capital Intelligence",
+      "title": "FAB Working Capital Intelligence (flagship)",
+      "content": "FAB's flagship working capital programme. Built for SMEs with confirmed delivered contracts and predictable receivables — uses that visibility to unlock financing more intelligently than a generic loan. The headline working capital product to highlight when an SME has real, contracted cash flows but a gap before collection.",
+      "triggers": [
+        "delivered contracts",
+        "signed contracts",
+        "confirmed orders",
+        "predictable receivables",
+        "we know who is paying us",
+        "long sales cycle but confirmed",
+        "intelligent financing",
+        "flagship working capital",
+        "contracted revenue"
+      ]
+    },
+    {
+      "id": "fab-fx-spot",
+      "category": "FX Solutions",
+      "product": "Spot FX",
+      "title": "FAB Spot FX",
+      "content": "On-the-spot foreign exchange execution for SMEs paying suppliers or receiving payments in foreign currency. Standard tool when cross-border money flows happen and execution is needed today.",
+      "triggers": [
+        "pay supplier in USD",
+        "receive USD",
+        "pay in GBP",
+        "foreign currency",
+        "convert currency",
+        "FX",
+        "exchange rate",
+        "multi currency payments"
+      ]
+    },
+    {
+      "id": "fab-fx-hedging",
+      "category": "FX Solutions",
+      "product": "FX Hedging / Forwards",
+      "title": "FAB FX Hedging and Forward Contracts",
+      "content": "Lock in a foreign exchange rate in advance to protect the business from currency swings. For SMEs whose margins are exposed to FX movement between contract signing and settlement.",
+      "triggers": [
+        "FX risk",
+        "currency risk",
+        "lock in a rate",
+        "forward contract",
+        "hedge",
+        "exposed to USD",
+        "exposed to GBP",
+        "currency moves hurt us",
+        "margin eaten by FX"
+      ]
+    },
+    {
+      "id": "fab-insurance-property-all-risk",
+      "category": "Insurance & Wealth",
+      "product": "Property All Risk Insurance",
+      "title": "FAB Property All Risk Insurance",
+      "content": "Bancassurance cover for business property and assets — protection against damage, theft, and other insurable risks across the SME's premises, stock, and equipment.",
+      "triggers": [
+        "insure premises",
+        "insure equipment",
+        "insure stock",
+        "warehouse insurance",
+        "office insurance",
+        "property cover",
+        "asset protection"
+      ]
+    },
+    {
+      "id": "fab-insurance-keyman",
+      "category": "Insurance & Wealth",
+      "product": "Keyman Insurance",
+      "title": "FAB Keyman Insurance",
+      "content": "Cover that protects the business against the loss of a critical person — founder, key partner, or specialist whose absence would materially hurt operations.",
+      "triggers": [
+        "key person",
+        "founder dependency",
+        "one person knows everything",
+        "business depends on one person",
+        "keyman",
+        "critical employee insurance"
+      ]
+    },
+    {
+      "id": "fab-wealth-investment",
+      "category": "Insurance & Wealth",
+      "product": "Wealth & Investment",
+      "title": "FAB Wealth and Investment",
+      "content": "Wealth management and investment solutions offered to SME owners and decision-makers alongside the business relationship — bridging business cash and personal wealth planning.",
+      "triggers": [
+        "invest the cash",
+        "personal wealth",
+        "owner wealth",
+        "investment options",
+        "wealth planning",
+        "grow our money"
+      ]
+    },
+    {
+      "id": "fab-cash-business-portal",
+      "category": "Cash Management",
+      "product": "Business Portal",
+      "title": "FAB Business Portal",
+      "content": "The online banking portal for SMEs — manage accounts, initiate payments, view balances, run reports, and operate the business banking relationship digitally.",
+      "triggers": [
+        "online banking",
+        "internet banking",
+        "self serve",
+        "manage accounts online",
+        "make payments online",
+        "business portal",
+        "digital banking"
+      ]
+    },
+    {
+      "id": "fab-cash-payments-collections-wps",
+      "category": "Cash Management",
+      "product": "Payments & Collections (incl. WPS)",
+      "title": "FAB Payments and Collections including WPS",
+      "content": "Outgoing payments, incoming collections, and Wage Protection System (WPS) payroll handling — the operational engine for moving money in and out of the business at scale, including paying staff in line with UAE regulations.",
+      "triggers": [
+        "payroll",
+        "pay staff",
+        "WPS",
+        "wages",
+        "bulk payments",
+        "collect from customers",
+        "salary payments",
+        "paying employees"
+      ]
+    },
+    {
+      "id": "fab-cash-liquidity-management",
+      "category": "Cash Management",
+      "product": "Liquidity Management",
+      "title": "FAB Liquidity Management",
+      "content": "Tools to manage cash positions across multiple accounts, entities, or currencies — sweeping, pooling, and visibility for SMEs with more than one operating account.",
+      "triggers": [
+        "multiple accounts",
+        "multiple entities",
+        "group of companies",
+        "sweep cash",
+        "pool cash",
+        "visibility across accounts",
+        "manage liquidity",
+        "treasury basics"
+      ]
+    },
+    {
+      "id": "fab-magnati-pos",
+      "category": "Magnati",
+      "product": "Magnati POS",
+      "title": "Magnati POS (Point of Sale)",
+      "content": "Card acceptance terminals from Magnati, FAB's payments ecosystem partner. Lets SMEs take card payments in store. Standard fit for retail, F&B, services, and any SME with face-to-face customers.",
+      "triggers": [
+        "card machine",
+        "POS terminal",
+        "take card payments",
+        "in store payments",
+        "retail payments",
+        "restaurant payments",
+        "swipe machine",
+        "Magnati POS"
+      ]
+    },
+    {
+      "id": "fab-magnati-business-in-a-box",
+      "category": "Magnati",
+      "product": "Magnati Business in a Box",
+      "title": "Magnati Business in a Box",
+      "content": "Bundled SME starter package from Magnati covering payments acceptance, point-of-sale, and the building blocks an SME needs to start transacting. Useful for newer businesses that need the full payments stack quickly.",
+      "triggers": [
+        "starter pack",
+        "new business setup",
+        "just opened",
+        "everything to start trading",
+        "all in one",
+        "business in a box",
+        "kickstart payments"
+      ]
+    },
+    {
+      "id": "fab-magnati-ecommerce",
+      "category": "Magnati",
+      "product": "Magnati e-commerce",
+      "title": "Magnati e-commerce",
+      "content": "Online payment acceptance through Magnati — gateway and checkout for SMEs that sell online or take online orders alongside in-store. Pairs with POS for omnichannel retail.",
+      "triggers": [
+        "online payments",
+        "online store",
+        "e commerce",
+        "website checkout",
+        "sell online",
+        "payment gateway",
+        "online orders",
+        "shopify",
+        "online sales"
+      ]
+    },
+    {
+      "id": "fab-sme-rewards",
+      "category": "SME Rewards",
+      "product": "FAB SME Rewards",
+      "title": "FAB SME Rewards programme",
+      "content": "Loyalty and rewards programme for FAB SME customers. Recognised value-add on top of the core banking relationship — enrolment is part of the standard onboarding package.",
+      "triggers": [
+        "rewards",
+        "loyalty",
+        "perks",
+        "benefits",
+        "SME rewards",
+        "discounts for businesses",
+        "value add"
+      ]
+    }
+  ]
+}

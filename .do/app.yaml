@@ -1,0 +1,78 @@
+# DigitalOcean App Platform Specification — FAB SME AI Onboarding Agent
+# Deploy via: doctl apps create --spec .do/app.yaml
+
+name: fab-consulting-agent
+
+# Global environment variables (shared across services)
+envs:
+  - key: NODE_ENV
+    value: production
+
+services:
+  # Backend API Service
+  - name: backend
+    github:
+      repo: geekyroshan/fab-consulting-agent
+      branch: main
+      deploy_on_push: true
+    source_dir: backend
+    build_command: npm ci --include=dev && npm run build
+    run_command: npm start
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    http_port: 3002
+    routes:
+      - path: /api
+        preserve_path_prefix: true
+      - path: /ws
+        preserve_path_prefix: true
+      - path: /health
+        preserve_path_prefix: true
+    envs:
+      - key: PORT
+        value: "3002"
+      - key: CORS_ORIGIN
+        value: ${APP_URL}
+      - key: OPENAI_API_KEY
+        type: SECRET
+      - key: OPENROUTER_API_KEY
+        type: SECRET
+      - key: ANTHROPIC_API_KEY
+        type: SECRET
+      - key: ELEVENLABS_API_KEY
+        type: SECRET
+      - key: ELEVENLABS_VOICE_ID
+        value: "IKne3meq5aSn9XLyUdCD"
+      - key: ENABLE_PINECONE
+        value: "true"
+      - key: PINECONE_API_KEY
+        type: SECRET
+      - key: PINECONE_HOST
+        type: SECRET
+      - key: PINECONE_INDEX
+        value: "fab-sme-kb"
+      - key: DATABASE_PATH
+        value: "./data/fab.db"
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 10
+      period_seconds: 30
+
+static_sites:
+  # Frontend Static Site
+  - name: frontend
+    github:
+      repo: geekyroshan/fab-consulting-agent
+      branch: main
+      deploy_on_push: true
+    source_dir: frontend
+    build_command: npm ci --include=dev && npm run build
+    environment_slug: node-js
+    output_dir: dist
+    catchall_document: index.html
+    routes:
+      - path: /
+    envs:
+      - key: VITE_BACKEND_URL
+        value: ""
