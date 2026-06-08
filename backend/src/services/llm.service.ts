@@ -126,7 +126,7 @@ export async function extractFabAnswerFromUserMessage(
         {
           role: 'system',
           content:
-            'You extract a single piece of information from a short user reply for a banker-grade onboarding. Return only valid JSON. Mirror the user\'s words verbatim — never invent or assume facts. If the reply is missing a piece the question explicitly asked for, return an empty value so we can probe for the missing piece.',
+            'You extract a single piece of information from a short user reply for a banker-grade onboarding. Return only valid JSON. Mirror the user\'s words verbatim — never invent or assume facts. Default to ACCEPTING any reply that meaningfully addresses the question; only mark incomplete when a clearly required piece is explicitly missing.',
         },
         {
           role: 'user',
@@ -137,9 +137,9 @@ ${completenessRule}
 
 Return JSON: { "value": string, "complete": boolean }
 - value: the user's literal answer relevant to the question, normalised to one short clause. Never paraphrase, never assume context the user didn't provide.
-- complete: true ONLY if the reply contains every piece the question explicitly asked for, per the rule above.
+- complete: default to TRUE. Set to false ONLY when the completeness rule above is clearly violated (e.g. a bare "yes" for Q5 with no direction/country, a bare number with no time unit for Q6, a bare number with no duration for Q4). If the reply is a reasonable sentence that touches on the question topic, complete is true even if some adjacent detail isn't explicit.
 
-If complete is false, set value to "" so the agent can probe the user for the missing piece.`,
+When complete is false, also set value to "" so the agent can probe.`,
         },
       ],
       response_format: { type: 'json_object' },
@@ -152,12 +152,18 @@ If complete is false, set value to "" so the agent can probe the user for the mi
 
     const parsed = JSON.parse(content) as { value?: string; complete?: boolean };
     const value = (parsed.value || '').trim();
-    // Hard gate: don't accept the value unless the LLM confirms completeness.
-    if (!value || parsed.complete === false) return {};
+    // Hard gate: drop if explicitly marked incomplete OR if value is empty.
+    // But also: if value is non-empty AND of reasonable length, accept it
+    // even when complete is somehow missing from the response (defensive).
+    if (!value) return {};
+    if (parsed.complete === false) return {};
     return { [targetKey]: value } as Partial<FabAnswers>;
   } catch (err) {
     console.error('extractFabAnswerFromUserMessage failed:', err);
-    return {};
+    // On extractor error, fall back to accepting the raw reply rather than
+    // stalling the conversation — the agent can still probe in the system
+    // prompt if it looks lazy.
+    return cleanReply.length >= 2 ? ({ [targetKey]: cleanReply } as Partial<FabAnswers>) : {};
   }
 }
 
@@ -169,21 +175,21 @@ If complete is false, set value to "" so the agent can probe the user for the mi
 function completenessRuleForQuestion(qid: string): string {
   switch (qid) {
     case 'q3_what_does':
-      return 'Completeness rule: the reply must describe what the business actually does day-to-day. A single word ("yes", "ok") or generic filler ("we do business") is NOT complete. A short sentence is fine.';
+      return 'Completeness rule: reject ONLY if the reply is a single non-descriptive word ("yes", "ok", "stuff", "things"). Any short sentence describing the business activity is complete.';
     case 'q4_size_stage':
-      return 'Completeness rule: the reply must contain BOTH (a) a sense of team size (any number of people, or words like "team of N", "solo", "just me", "a few") AND (b) a sense of how long the business has been operating (a number of years/months, or words like "just started", "new", "a few years"). A bare number alone ("5", "12") is NOT complete — could mean staff OR years. A description of ONLY size or ONLY duration is NOT complete.';
+      return 'Completeness rule: reject ONLY if the reply is a bare number ("5", "12", "20") with no time/duration context (no "year(s)", "month(s)", "going for", "since", "established", "started", etc.) AND no count of people. If the reply mentions either staff count OR years OR both, mark complete. Acceptable examples: "18 staff, 5 years" (complete), "we are 5 of us, started last year" (complete), "5" alone (incomplete — could be staff or years), "5 staff" (complete — staff implied), "5 years" (complete — duration implied).';
     case 'q5_cross_border':
-      return 'Completeness rule: a bare "yes" or "no" is NOT complete. If yes: the reply must mention direction (buying, selling, or both) AND at least one country/region. If no: a clear "no", "only UAE", "domestic only", or similar phrasing IS complete.';
+      return 'Completeness rule: reject ONLY if the reply is a bare "yes" with no follow-on detail (no direction, no country, no product). A bare "no", "only UAE", "domestic" is complete (means no cross-border). Any "yes" combined with direction (buying/selling/import/export) OR a country/region is complete.';
     case 'q6_payment_terms':
-      return 'Completeness rule: the reply must include a time period with a unit (e.g. "30 days", "60 days", "on the spot", "immediately") OR a clear "we get paid upfront". A bare number ("30", "60") is NOT complete.';
+      return 'Completeness rule: reject ONLY if the reply is a bare number ("30", "60") with NO unit/context. Anything with "days", "weeks", "months", "upfront", "immediately", "on the spot", "30 days", "net 60" etc. is complete.';
     case 'q7_payment_method':
-      return 'Completeness rule: the reply must mention at least one payment method (card, bank transfer, cash, online, POS, etc.). A bare "yes" or "no" is NOT complete; a single word like "card" or "bank transfer" IS complete.';
+      return 'Completeness rule: reject ONLY if the reply is a bare "yes" or "no" with no method mentioned. Any specific method (card, bank transfer, cash, online, POS, cheque, e-commerce, etc.) — even a single word — is complete.';
     case 'q8_headache':
-      return 'Completeness rule: the reply must describe a specific pain point in at least a short sentence. A single word ("cash flow", "growth", "money") is NOT complete — we need to know what specifically about it.';
+      return 'Completeness rule: reject ONLY if the reply is a single generic word ("cash flow", "growth", "money", "nothing") with no specific detail. Any sentence or phrase describing a specific pain point is complete.';
     case 'q9_growth_optional':
-      return 'Completeness rule: a clear "no" / "nothing big" IS complete. Otherwise the reply must mention what the upcoming thing is (hiring, premises, equipment, etc.).';
+      return 'Completeness rule: a clear "no" / "nothing big" / "not really" is complete. Any mention of a specific upcoming thing (hiring, premises, equipment, expansion) is complete.';
     default:
-      return 'Completeness rule: the reply must directly address the question.';
+      return 'Completeness rule: accept any reply that directly addresses the question.';
   }
 }
 
