@@ -12,7 +12,7 @@ services:
   # Backend API Service
   - name: backend
     github:
-      repo: geekyroshan/fab-consulting-agent
+      repo: geekyroshan/fab-agent
       branch: main
       deploy_on_push: true
     source_dir: backend
@@ -44,11 +44,12 @@ services:
         type: SECRET
       - key: ELEVENLABS_VOICE_ID
         value: "IKne3meq5aSn9XLyUdCD"
+      # Pinecone disabled for the demo — backend falls back to the local KB
+      # (30 FAB product docs bundled in backend/knowledge/fab-products-kb.json).
+      # Flip to "true" once a working Pinecone key is provisioned.
       - key: ENABLE_PINECONE
-        value: "true"
+        value: "false"
       - key: PINECONE_API_KEY
-        type: SECRET
-      - key: PINECONE_HOST
         type: SECRET
       - key: PINECONE_INDEX
         value: "fab-sme-kb"
@@ -63,7 +64,7 @@ static_sites:
   # Frontend Static Site
   - name: frontend
     github:
-      repo: geekyroshan/fab-consulting-agent
+      repo: geekyroshan/fab-agent
       branch: main
       deploy_on_push: true
     source_dir: frontend

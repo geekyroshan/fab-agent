@@ -1,0 +1,61 @@
+# Render Blueprint — FAB SME AI Onboarding Agent
+# One-click deploy: https://render.com/deploy?repo=https://github.com/geekyroshan/fab-agent
+#
+# After connecting the repo at https://dashboard.render.com/blueprints, set these
+# secrets in the dashboard:
+#   - OPENAI_API_KEY
+#   - ELEVENLABS_API_KEY
+#
+# Pinecone stays disabled — backend uses the local FAB KB (30 product docs
+# bundled in backend/knowledge/fab-products-kb.json).
+
+services:
+  # Backend — Express + WebSocket (Whisper, ElevenLabs, OpenAI chat)
+  - type: web
+    name: fab-agent-backend
+    runtime: node
+    plan: starter
+    region: oregon
+    rootDir: backend
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    branch: main
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3002
+      - key: CORS_ORIGIN
+        sync: false             # set to the frontend URL after first deploy
+      - key: OPENAI_API_KEY
+        sync: false             # paste in dashboard
+      - key: ELEVENLABS_API_KEY
+        sync: false             # paste in dashboard
+      - key: ELEVENLABS_VOICE_ID
+        value: IKne3meq5aSn9XLyUdCD
+      - key: ENABLE_PINECONE
+        value: "false"
+      - key: PINECONE_INDEX
+        value: fab-sme-kb
+      - key: DATABASE_PATH
+        value: ./data/fab.db
+
+  # Frontend — Vite static site
+  - type: web
+    name: fab-agent-frontend
+    runtime: static
+    plan: starter
+    rootDir: frontend
+    buildCommand: npm ci --include=dev && npm run build
+    staticPublishPath: ./dist
+    autoDeploy: true
+    branch: main
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_BACKEND_URL
+        sync: false             # paste the backend URL after first deploy
