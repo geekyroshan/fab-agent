@@ -65,8 +65,13 @@
 - [x] Walk through worked sample (logistics importer) end-to-end — `POST /api/session/start {useBackup:true}` → `POST /api/session/:id/analyze` returns a complete FabReport.
 - [x] Confirm report renders 3 sections correctly — snapshot ✓, 4 needs ✓, 5 recommendations with triggering facts ✓, exactly 1 proactive flag (FX Forwards) ✓, startingPoint ✓.
 
-## 7. Demo-ready status
-- Backend serves on :3002, frontend Vite dev server on :5174.
+## 7. Demo-ready status — VERIFIED LIVE
+- Backend serves on :3002, frontend Vite dev server on :5174 (`<title>FAB SME Setup</title>`).
 - `POST /api/session/start` accepts `{useBackup:true}` for the pre-vetted SME demo path.
 - WebSocket emits `progress`, `research`, `report` events as the linear flow advances.
-- Worked sample matches PRD section 6 verbatim (Falcon Components Trading LLC, 30 staff, 4 years, 60-day terms, China/South Korea imports → Working Capital Loan, Trade Financing, Invoice Discounting, Commercial Credit Card, FX Forwards proactive).
+- **Worked sample (backup)** matches PRD section 6 verbatim — Falcon Components Trading LLC → Working Capital Loan, Trade Financing, Invoice Discounting, Commercial Credit Card, FX Forwards proactive.
+- **Live test (Bright Print Studio, fresh session, no backup)**: 8 turns of natural reflect-back conversation, graceful research fallback when LLM didn't know the company (`source:'thin'`), report with snapshot + 3 needs + 4 recommendations (Business Advantage Account, Invoice Discounting, Magnati POS, Commercial Credit Card proactive) + starting-point. Magnati POS correctly surfaced from "some clients want to pay by card".
+
+## 8. Repo
+- Pushed to `https://github.com/geekyroshan/fab-agent` (`main` branch).
+- 3 commits: baseline re-skin → worked-sample verified → live-chat verified.
