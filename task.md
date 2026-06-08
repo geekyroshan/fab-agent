@@ -60,6 +60,13 @@
 - [x] Frontend `npm run build` (1.28s, no errors)
 - [x] Backend `npm run build` + boot — loads 30 FAB products, health endpoint green
 - [x] Migrations: `fab_answers` + `company_research` + `report_json` columns added on first boot
-- [ ] **BLOCKED**: Populate Pinecone with FAB KB — the provided API key was rejected by Pinecone (`PineconeAuthorizationError`). The backend runs fine on local-KB fallback (30 docs loaded); fix the key (or generate a new one in the Pinecone console) and re-run `npm run populate-pinecone` when ready. Index name should be `fab-sme-kb`, dim 1536, metric cosine.
-- [ ] Walk through worked sample (logistics importer) end-to-end (requires OPENAI_API_KEY to be set in `backend/.env`)
-- [ ] Confirm report renders 3 sections correctly (same blocker — needs OpenAI key)
+- [ ] **BLOCKED**: Populate Pinecone with FAB KB — the provided API key was rejected by Pinecone (`PineconeAuthorizationError`). Backend runs on local-KB fallback (30 docs loaded, keyword search active). Regenerate key in Pinecone console + create `fab-sme-kb` index (1536 dims, cosine), then `npm run populate-pinecone`.
+- [x] OPENAI_API_KEY validated and written to `backend/.env` (gitignored).
+- [x] Walk through worked sample (logistics importer) end-to-end — `POST /api/session/start {useBackup:true}` → `POST /api/session/:id/analyze` returns a complete FabReport.
+- [x] Confirm report renders 3 sections correctly — snapshot ✓, 4 needs ✓, 5 recommendations with triggering facts ✓, exactly 1 proactive flag (FX Forwards) ✓, startingPoint ✓.
+
+## 7. Demo-ready status
+- Backend serves on :3002, frontend Vite dev server on :5174.
+- `POST /api/session/start` accepts `{useBackup:true}` for the pre-vetted SME demo path.
+- WebSocket emits `progress`, `research`, `report` events as the linear flow advances.
+- Worked sample matches PRD section 6 verbatim (Falcon Components Trading LLC, 30 staff, 4 years, 60-day terms, China/South Korea imports → Working Capital Loan, Trade Financing, Invoice Discounting, Commercial Credit Card, FX Forwards proactive).
