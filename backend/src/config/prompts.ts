@@ -48,6 +48,61 @@ function formatResearch(research: CompanyResearch | undefined): string {
   return parts.map((p) => `- ${p}`).join('\n');
 }
 
+/** Return the captured answer value (or undefined) for a given question id. */
+function slotValueForQuestion(qid: string, fa: FabAnswers | undefined): string | undefined {
+  if (!fa) return undefined;
+  const map: Record<string, keyof FabAnswers> = {
+    q1_name: 'name',
+    q2_company: 'companyName',
+    q3_what_does: 'businessDescription',
+    q4_size_stage: 'teamSize',
+    q5_cross_border: 'crossBorder',
+    q6_payment_terms: 'paymentTerms',
+    q7_payment_method: 'paymentMethod',
+    q8_headache: 'biggestHeadache',
+    q9_growth_optional: 'growthPlans',
+  };
+  const key = map[qid];
+  if (!key) return undefined;
+  const v = fa[key];
+  return v && v.trim().length > 0 ? v : undefined;
+}
+
+/** True if we've already attempted to ask the current question (i.e. assistant has spoken). */
+function hasUserAnsweredAlready(currentIndex: number, fa: FabAnswers | undefined): boolean {
+  // Heuristic: if any later slot is filled, the question must have been asked before.
+  // Or if currentIndex > 0 with no progress, we're re-asking the current one.
+  if (!fa) return currentIndex > 0;
+  const order: Array<keyof FabAnswers> = ['name', 'companyName', 'businessDescription', 'teamSize', 'crossBorder', 'paymentTerms', 'paymentMethod', 'biggestHeadache', 'growthPlans'];
+  for (let i = currentIndex + 1; i < order.length; i++) {
+    if (fa[order[i]] && (fa[order[i]] as string).trim().length > 0) return true;
+  }
+  return currentIndex > 0;
+}
+
+/** Per-question probing rules — push back on lazy answers. */
+function probeRulesForQuestion(qid: string, fa: FabAnswers | undefined): string {
+  switch (qid) {
+    case 'q4_size_stage':
+      return `# Probing rule for Q4
+The user must give you BOTH team size AND how long they've been operating. If their reply is just a number (e.g. "5", "20") with no time context, ask: "5 staff, or 5 years going?" — never assume. Both numbers matter for tier selection.`;
+    case 'q5_cross_border':
+      return `# Probing rule for Q5
+A bare "yes" or "no" is not enough. If they say yes, probe: "Buying, selling, or both? And roughly which countries?". If they say no, accept it and move on — but ONLY if their reply was a clear no.`;
+    case 'q6_payment_terms':
+      return `# Probing rule for Q6
+If they give a single number (e.g. "30"), confirm the unit: "30 days, you mean?". You want a clear days-from-invoice figure or "on the spot / immediately".`;
+    case 'q7_payment_method':
+      return `# Probing rule for Q7
+Accept short answers like "bank transfer" or "card" — but if they say "yes/no" without specifying, probe: "Card, bank transfer, cash, or a mix?".`;
+    case 'q8_headache':
+      return `# Probing rule for Q8
+This is the highest-signal answer. If their reply is short or vague ("cash flow", "growth"), gently probe ONCE: "Can you give me one example of where that hurts day to day?". Never push more than once.`;
+    default:
+      return '';
+  }
+}
+
 /** Render the full FAB_QUESTIONS list with the current index highlighted. */
 function formatQuestionList(currentQuestionIndex: number): string {
   return FAB_QUESTIONS.map((q: FabQuestion, idx: number) => {
@@ -80,9 +135,24 @@ export function buildSystemPrompt(
       ? `The user just gave you a high-signal answer. Acknowledge it in ONE short clause (max 8 words) before asking the next question. Example: "Got it — cash-gap is real." then move on.`
       : `Acknowledge briefly if natural, then ask the next question. Do not pile on filler.`;
 
+  const currentSlotValue = currentQuestion ? slotValueForQuestion(currentQuestion.id, fabAnswers) : undefined;
+  const reAsking = !!(currentSlotValue === undefined && hasUserAnsweredAlready(currentQuestionIndex, fabAnswers));
+
+  const probeGuidance = currentQuestion
+    ? probeRulesForQuestion(currentQuestion.id, fabAnswers)
+    : '';
+
   const nextQuestionText = currentQuestion
-    ? `The next question to ask is question index ${currentQuestionIndex} (id: ${currentQuestion.id}):\n"${currentQuestion.agentAsks}"\n\nYou MAY personalise the wording (e.g. substitute "${fabAnswers?.companyName || 'the business'}" for "[Company]"), but you MUST capture the same intent and ask ONLY this one question.`
-    : `All questions have been asked. Do NOT ask another question. Tell the user you have what you need and you are putting their FAB setup together now.`;
+    ? `The next question to ask is question index ${currentQuestionIndex} (id: ${currentQuestion.id}):
+"${currentQuestion.agentAsks}"
+
+You MAY personalise the wording (substitute "${fabAnswers?.companyName || 'the business'}" for "[Company]") but you MUST capture the same intent and ask ONLY this one question.
+
+${reAsking
+  ? `IMPORTANT: The user's previous reply did not contain a usable answer to this question (likely a greeting, a one-word filler like "yes/no/ok", or something off-topic). You are re-asking. Do NOT repeat the question verbatim — rephrase it softly and add a tiny acknowledgment, e.g. "No problem — could you share your name?" or "Just to be sure I get this — buying, selling, or both, and roughly which countries?". Never sound robotic.`
+  : ''}
+${probeGuidance}`
+    : `All questions have been asked. Do NOT ask another question. Tell the user you have what you need and you are putting their FAB setup together now. Your reply should be exactly: "Putting your setup together. One moment."`;
 
   return `You are a FAB (First Abu Dhabi Bank) SME relationship manager guiding a small-business owner through a quick onboarding. You are warm, confident, banker-grade but human. Second person. Short sentences. No jargon.
 
