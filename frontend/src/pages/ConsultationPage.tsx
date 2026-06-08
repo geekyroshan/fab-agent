@@ -156,7 +156,12 @@ export function ConsultationPage() {
   const showReflectBackPill =
     !!companyResearch && companyResearch.source !== 'failed' && !hasValidReport;
 
+  // Prefer the canonical companyName that the backend stuffed onto the
+  // report event payload (it backfilled lead.company in SQL when Q2 was
+  // captured). Fall back to whatever the store has, then to the initial
+  // lead. This is the source of truth used in the PDF header.
   const companyName =
+    (fabReport as unknown as { companyName?: string } | null)?.companyName ||
     useSessionStore.getState().fabAnswers.companyName ||
     lead.company ||
     undefined;

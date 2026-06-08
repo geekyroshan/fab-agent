@@ -1,7 +1,7 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { IncomingMessage } from 'http';
 import { getPipelineService, removePipelineService } from '../services/pipeline.service.js';
-import { getSession } from '../services/database.service.js';
+import { getSession, getLeadBySession } from '../services/database.service.js';
 import { ServerMessage } from '../types/index.js';
 
 export function setupWebSocket(wss: WebSocketServer): void {
@@ -66,7 +66,17 @@ export function setupWebSocket(wss: WebSocketServer): void {
     });
 
     pipeline.on('report', (data) => {
-      sendMessage(ws, { type: 'report', data } as any);
+      // Attach the canonical lead + fabAnswers so the frontend has the
+      // company name / owner name without needing a separate fetch. The
+      // backend backfilled these in SQL when Q1/Q2 were captured.
+      const lead = getLeadBySession(sessionId);
+      const enriched = {
+        ...data,
+        companyName: lead?.fabAnswers?.companyName || lead?.company || undefined,
+        userName: lead?.fabAnswers?.name || lead?.name || undefined,
+        fabAnswers: lead?.fabAnswers,
+      };
+      sendMessage(ws, { type: 'report', data: enriched } as any);
     });
 
     pipeline.on('speechStarted', () => {
