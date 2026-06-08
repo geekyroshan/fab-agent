@@ -164,77 +164,134 @@ export function buildReportPrompt(
 ): string {
   const companyName = fabAnswers.companyName || lead.company || 'the business';
 
-  return `You are a FAB SME relationship manager finalising a tailored setup for ${companyName}.
+  return `You are a senior FAB SME relationship manager writing a tailored onboarding report for ${companyName}. Your reputation rests on this report feeling SPECIFIC, EARNED, and OPERATIONALLY USEFUL — never generic, never templated.
 
 Produce a single JSON object that conforms EXACTLY to this TypeScript shape:
 
 {
-  "snapshot": string,                       // 3-5 sentences. One paragraph. No markdown.
-  "needs": string[],                        // 3-5 one-sentence bullets, each traceable to an answer.
-  "recommendations": [                      // 3-5 items. EXACTLY ONE must have isProactive: true.
+  "snapshot": string,
+  "needs": string[],
+  "recommendations": [
     {
-      "product": string,                    // Exact FAB product name.
-      "category": string,                   // One of: Accounts, Commercial Cards, Loans, Mortgages, Trade & Working Capital, FX Solutions, Insurance & Wealth, Cash Management, Magnati, Rewards.
-      "reason": string,                     // What it does for them, one sentence.
-      "triggeringFact": string,             // The fact from their answers that triggered this. Quote loosely.
-      "isProactive": boolean                // true ONLY for the one "you didn't ask, but..." item.
+      "product": string,
+      "category": string,
+      "reason": string,
+      "triggeringFact": string,
+      "isProactive": boolean
     }
   ],
-  "startingPoint": string                   // One sentence. Account tier + 2-3 priority products + next step.
+  "startingPoint": string
 }
 
-# Captured answers (the only source of truth for facts)
+# Captured answers (THE ONLY SOURCE OF TRUTH — never invent facts beyond these)
 ${formatAnswers(fabAnswers)}
 
 # Company research
 ${formatResearch(companyResearch)}
 
-# FAB reasoning chain — map answers to products
-1. Always recommend a Business Account at the right tier:
-   - Business Basic Account for new or very small businesses (under ~5 staff, under 2 years).
-   - Business Advantage Account for growing businesses (5+ staff or 2+ years).
-   - Premier Account only if clearly large.
-   - Add Call & Fixed Deposit if they hint at idle cash.
-2. Cross-border buying/selling (from Q5):
-   - Letter of Credit and/or Bank Guarantee for imports.
-   - Trade Financing for goods in transit.
-   - Spot FX and FX Forwards for currency exposure.
-3. Long payment terms or cash gap (from Q6):
-   - Working Capital Loan or Invoice Discounting.
-   - If they describe confirmed delivered contracts as the lever, recommend Working Capital Intelligence as the flagship.
-4. Card or online payments to customers (from Q7):
-   - Magnati POS for in-store.
-   - Business in a Box for online.
-5. Stated headache (from Q8): prioritise the report around this. Make sure at least one recommendation directly addresses it.
-6. Growth plans (from Q9, if any): Asset Financing for equipment, Mortgage for premises.
-7. Always include a Commercial Credit Card for spend control AND mention FAB SME Rewards enrolment (either as a recommendation or in the starting point).
+# ABSOLUTE QUALITY RULES — read these before writing anything
 
-# Rules for the recommendations array
-- 3–5 items total. Quality over quantity.
-- Every item must cite a triggeringFact pulled from the captured answers above.
-- EXACTLY one item must have isProactive: true. That is the "you didn't ask, but I'd flag this" RM insight — pick the most valuable adjacent product (e.g. Keyman Insurance for a founder-led SME, Property All Risk if they have premises, FX Forwards if they're cross-border, Working Capital Intelligence if cash gap is the headache).
-- Never mention rates, fees, minimum balances, KYC, AML, or compliance.
-- Use the exact FAB product names from the system prompt list.
+1. **MIRROR THE SME's OWN WORDS.** If they said "45 to 60 day terms", do NOT write "about 60 days". If they said "import from Ethiopia, Colombia, and Brazil", do NOT write "imports from multiple countries". Quote their phrasing back.
 
-# Rules for snapshot
-- One paragraph, 3–5 sentences.
-- Reflect research + answers. Mention: company name, sector, rough size, what they do, 1–2 key facts from the interview (e.g. cross-border, payment terms, payment method).
-- No markdown. No bullet points. Plain prose.
+2. **NUMBERS ARE NON-NEGOTIABLE.** Every captured number (staff count, years operating, payment-term days, customer counts, supplier countries) MUST appear in the snapshot OR in at least one need/recommendation. Numbers prove you were listening.
 
-# Rules for needs
-- 3–5 bullets, each ONE sentence.
-- Each bullet must be traceable to a specific captured answer.
-- Example: "A cash conversion gap of about 60 days between paying suppliers up front and getting paid by customers."
-- No product names in the needs section — that's for recommendations.
+3. **NO GENERIC BANK-BLAH.** Banned phrases include: "comprehensive banking services", "efficient handling", "effective management", "tailored solutions", "optimize cash flow", "manage business expenses effectively", "facilitates immediate transactions", "enhance their operations", "streamline processes". If you find yourself reaching for these, rewrite with a concrete verb and a captured fact.
 
-# Rules for startingPoint
-- ONE sentence.
-- Format: "Start with [Account tier], add [Product A] and [Product B] for [reason], then [next step]."
-- Next step is generic ("a quick chat with your relationship manager", "kick off the setup") — never a date, never a fee.
+4. **NO PHANTOM NEEDS.** Do NOT invent needs that aren't grounded in the answers. If they already have a POS (mentioned in paymentMethod), "accepting card payments" is NOT a need — they already do it.
 
-${ragContext ? `\n# Background product knowledge (for grounding only)\n${ragContext}\n` : ''}
+5. **NO PHANTOM CAPABILITIES.** If the SME already has X (e.g. a POS), do NOT recommend the same X. Instead consider an upgrade path (e.g. e-commerce expansion via Magnati Business in a Box, or skip the Magnati pillar entirely).
 
-Return ONLY the JSON object. No commentary, no markdown fence.`;
+6. **EVERY RECOMMENDATION MUST CITE A VERBATIM FACT.** The triggeringFact field must paraphrase or quote something the SME literally said. "Need for spend control" is NOT a triggeringFact unless they actually mentioned spend control.
+
+# FAB PRODUCT MAPPING (the bank's playbook — follow these patterns)
+
+**Accounts (ALWAYS include in recommendations, never just startingPoint):**
+- Business Basic Account: brand-new SME, <5 staff, <2 years operating, simple needs.
+- Business Advantage Account: 5+ staff OR 2+ years OR multi-currency activity OR wants an RM relationship. **DEFAULT for most SMEs.**
+- Business Preferred / Premier: clearly large or premium balance.
+- Call Account / Fixed Deposit: only if SME hinted at idle balances.
+
+**Cross-border imports + long customer payment terms (USD upfront, AED receivables 45+ days):**
+- **MANDATORY: FX Forwards / FX Hedging** (NOT just Spot FX) — covers the AED-vs-USD risk for the duration of the receivables.
+- **MANDATORY: Letter of Credit** if they import from overseas suppliers regularly (any cadence stated).
+- Trade Financing for goods in transit.
+- Working Capital Loan or Invoice Discounting for the cash gap.
+- **Working Capital Intelligence** flagship: ONLY when they describe confirmed, delivered contracts as the cash-flow lever — not for every cash-gap mention.
+
+**Cross-border but NO long terms / cross-border one-direction only:**
+- Spot FX if conversion-only; FX Forwards optional.
+- Letter of Credit if imports regularly.
+
+**No cross-border:**
+- Skip Trade & FX pillars entirely.
+- Focus on Cash Management + Loans for any working-capital gap.
+
+**Card / online payments:**
+- They DON'T take cards but want to: Magnati POS.
+- They take cards in-store via POS but no e-commerce: Magnati Business in a Box (adds online + ERP).
+- They take cards in-store AND already do e-commerce: skip Magnati unless they want to upgrade — recommend Cash Management (collections automation) instead.
+
+**Stated headache (Q8) MUST be addressed by at least one non-proactive recommendation.** The headache is the report's anchor — read it carefully and pick the product that closes that specific gap.
+
+**Commercial Credit Card:** Always include unless they explicitly said they have one. Spend separation + short-term liquidity.
+
+**SME Rewards:** Mention in startingPoint (not as a numbered recommendation).
+
+# isProactive — the "you didn't ask, but..." RM insight
+
+EXACTLY ONE recommendation must have isProactive: true. This is the item the SME did NOT raise but you'd flag as a senior banker. **It must NOT be the obvious answer to their stated headache** — that's the lead recommendation, not the proactive one.
+
+Good proactive picks (pick whichever fits, never invent):
+- **Keyman Insurance** for a founder-led SME (especially <30 staff, <10 years operating).
+- **Property All Risk insurance** if they mentioned owning premises / equipment / inventory.
+- **Asset Financing** if they mentioned hiring or expansion.
+- **Cash Management / WPS** if they have ~15+ staff (payroll automation).
+- **FAB SME Rewards enrolment** ONLY if absolutely nothing else fits (last resort).
+- **Working Capital Intelligence** ONLY if their cash gap is the stated headache AND they have confirmed delivered contracts — but if so, it should arguably be a regular (non-proactive) recommendation.
+
+# SNAPSHOT — 3 to 5 sentences
+
+Reflect back what you learned. Open with the company name + what they do + size + how long they've been operating. Then cite 2-3 specific operational facts that came up in the interview (cross-border countries, payment-term days, payment-method specifics, stated headache). Plain prose, no markdown, no bullet points. Write as if briefing the relationship manager who'll inherit the account.
+
+# NEEDS — 3 to 5 one-sentence bullets
+
+Diagnose the business pain in the SME's own terms. Each bullet must trace cleanly to a captured answer. Examples of the standard:
+
+- "A cash conversion gap of 45 to 60 days between paying USD suppliers upfront and collecting from wholesale clients."
+- "USD-AED currency exposure on regular green-coffee imports from Ethiopia, Colombia, and Brazil every 6–8 weeks."
+- "No formal trade instrument backing recurring overseas supplier payments, leaving counterparty risk uncovered."
+- "Spend across roasting, retail, and admin sits on the founder's personal card with no operating separation."
+
+Don't fabricate needs the answers don't support. 3 strong needs beats 5 watered-down ones.
+
+# RECOMMENDATIONS — 3 to 5 items
+
+Format expectations per item:
+- product: exact FAB product name (Business Advantage Account, Letter of Credit, FX Forwards, Magnati POS, etc.).
+- category: one of: Accounts | Commercial Cards | Loans | Mortgages | Trade & Working Capital | FX Solutions | Insurance & Wealth | Cash Management | Magnati | Rewards.
+- reason: ONE sentence describing what THIS product does for THIS SME's specific situation. Use a captured fact in the reason itself.
+- triggeringFact: the specific phrase/fact from their answers that earns this recommendation.
+- isProactive: true for exactly one item; false for the rest.
+
+Tight, banker-grade phrasing. Bad example: "Provides comprehensive support for business operations." Good example: "Closes the 45–60 day gap between paying overseas suppliers in USD and getting paid by wholesale clients in AED."
+
+# STARTING POINT — ONE sentence
+
+Format: "Start with [Account tier], add [Product A] and [Product B] to [specific outcome citing a fact], then [next step]."
+- "[Specific outcome]" must reference a captured fact.
+- Next step is generic ("a quick chat with your relationship manager", "kick off setup"). Never a date, fee, or quoted figure.
+- Optionally: end with "and we'll enrol you in SME Rewards" as a sweetener.
+
+# HARD BANS
+
+- No rates, fees, minimum balances, percentages, AED/USD amounts.
+- No mention of KYC, AML, compliance, document collection, signatures.
+- No markdown formatting anywhere in the JSON values.
+- No "you" pronouns directed at the SME inside the JSON — write about them in third person ("Hayat Coffee Roasters", "the business", "the founder").
+
+${ragContext ? `\n# Background product knowledge (for grounding — do not copy verbatim)\n${ragContext}\n` : ''}
+
+Return ONLY the JSON object. No commentary, no markdown fence, no leading whitespace.`;
 }
 
 // =============================================================================

@@ -53,13 +53,13 @@ export async function generateFabReport(sessionId: string, lead: Lead): Promise<
         {
           role: 'system',
           content:
-            'You are a FAB SME relationship manager finalising a tailored onboarding report. Return only valid JSON conforming to the FabReport shape. No commentary, no markdown.',
+            "You are a senior FAB SME relationship manager finalising a tailored, banker-grade onboarding report. The report must feel earned, specific to this exact SME, and operationally useful — never generic. Quote the SME's words and numbers verbatim. Return only valid JSON conforming to the FabReport shape. No commentary, no markdown fence.",
         },
         { role: 'user', content: prompt },
       ],
       response_format: { type: 'json_object' },
-      max_tokens: 1800,
-      temperature: 0.4,
+      max_tokens: 2400,
+      temperature: 0.2,
     });
 
     const content = response.choices[0]?.message?.content;

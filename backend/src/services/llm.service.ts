@@ -321,8 +321,26 @@ function extractFirstName(reply: string): string {
 }
 
 function stripFiller(reply: string): string {
-  return reply
-    .replace(/^(it'?s|the company is|we are|we'?re|the business is|called)\s+/i, '')
-    .replace(/[.!?]+$/, '')
-    .trim();
+  // Apply filler-prefix strips iteratively so phrases like
+  // "it's called Hayat Coffee Roasters" → "Hayat Coffee Roasters" (not "called Hayat...").
+  let s = reply.trim();
+  const fillerPatterns = [
+    /^(it'?s|that'?s|this is|the company is|the business is|we are|we'?re|i'?m|we go by|we trade as|trading as|known as|operating as)\s+/i,
+    /^(my company is|my business is|the name is|name'?s|called|named|our name is)\s+/i,
+    /^(well|so|um|uh|er|like|basically|honestly|actually|just|okay|ok),?\s+/i,
+  ];
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const p of fillerPatterns) {
+      const next = s.replace(p, '');
+      if (next !== s) {
+        s = next;
+        changed = true;
+      }
+    }
+  }
+
+  return s.replace(/[.!?]+$/, '').trim();
 }

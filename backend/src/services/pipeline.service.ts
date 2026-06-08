@@ -16,6 +16,7 @@ import {
   updateSessionStatus,
   updateFabAnswers,
   updateCompanyResearch,
+  updateLead,
 } from './database.service.js';
 import {
   PipelineState,
@@ -244,6 +245,27 @@ export class PipelineService extends EventEmitter {
           const merged = updateFabAnswers(this.sessionId, patch);
           this.context!.lead.fabAnswers = merged;
           extractionSucceeded = true;
+
+          // Backfill the canonical Lead.name/company columns from the extracted
+          // FabAnswers so downstream consumers (PDF, admin views, email
+          // templates) see the right values without having to dig into the
+          // fab_answers JSON blob.
+          const leadPatch: Partial<{ name: string; company: string }> = {};
+          if (patch.name && patch.name.trim()) {
+            leadPatch.name = patch.name.trim();
+          }
+          if (patch.companyName && patch.companyName.trim()) {
+            leadPatch.company = patch.companyName.trim();
+          }
+          if (Object.keys(leadPatch).length > 0) {
+            try {
+              updateLead(this.sessionId, leadPatch);
+              if (leadPatch.name) this.context!.lead.name = leadPatch.name;
+              if (leadPatch.company) this.context!.lead.company = leadPatch.company;
+            } catch (err) {
+              console.warn('updateLead backfill failed (non-fatal):', err);
+            }
+          }
         }
       }
       if (localAbort.signal.aborted) return;
